@@ -30,6 +30,7 @@ type InventoryService struct {
 	NetworkPolicyStore       *NetworkPolicyStore
 	IngressPolicyStore       *IngressPolicyStore
 	ClusterStore             *ClusterStore
+	VirtualMachineStore      *VirtualMachineStore
 
 	requestBuffer []containerinventory.ContainerInventoryObject
 	pendingAdd    map[string]interface{}
@@ -73,6 +74,9 @@ func NewInventoryService(service commonservice.Service) *InventoryService {
 	}}
 	inventoryService.ProjectStore = &ProjectStore{ResourceStore: commonservice.ResourceStore{
 		Indexer: cache.NewIndexer(keyFunc, cache.Indexers{string(ContainerProject): indexFunc}),
+	}}
+	inventoryService.VirtualMachineStore = &VirtualMachineStore{ResourceStore: commonservice.ResourceStore{
+		Indexer: cache.NewIndexer(keyFunc, cache.Indexers{string(VirtualMachine): indexFunc}),
 	}}
 	inventoryService.Service = service
 	return inventoryService
@@ -157,6 +161,10 @@ func (s *InventoryService) SyncInventoryStoreByType(clusterUUID string) error {
 	if err != nil {
 		return err
 	}
+	err = s.initVirtualMachines()
+	if err != nil {
+		return err
+	}
 	return nil
 
 }
@@ -203,6 +211,11 @@ func (s *InventoryService) SyncInventoryObject(bufferedKeys sets.Set[InventoryKe
 			}
 		case ContainerNetworkPolicy:
 			retryKey := s.SyncContainerNetworkPolicy(name, namespace, key)
+			if retryKey != nil {
+				retryKeys.Insert(*retryKey)
+			}
+		case VirtualMachine:
+			retryKey := s.SyncVirtualMachine(name, namespace, key)
 			if retryKey != nil {
 				retryKeys.Insert(*retryKey)
 			}
@@ -258,6 +271,12 @@ func (s *InventoryService) DeleteResource(externalId string, resourceType Invent
 			return nil
 		}
 		s.DeleteInventoryObject(resourceType, externalId, inventoryObject)
+	case VirtualMachine:
+		inventoryObject := s.VirtualMachineStore.GetByKey(externalId)
+		if inventoryObject == nil {
+			return nil
+		}
+		s.pendingDelete[externalId] = inventoryObject.(*VirtualMachineObj)
 	default:
 		return fmt.Errorf("unknown resource_type: %v for external_id %s", resourceType, externalId)
 	}
@@ -353,6 +372,12 @@ func (s *InventoryService) updateInventoryStore() error {
 			if err != nil {
 				return err
 			}
+		case string(VirtualMachine):
+			instance := addItem.(*VirtualMachineObj)
+			err := s.VirtualMachineStore.Add(instance)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	for _, deleteItem := range s.pendingDelete {
@@ -390,6 +415,12 @@ func (s *InventoryService) updateInventoryStore() error {
 		case string(ContainerClusterNode):
 			node := deleteItem.(*containerinventory.ContainerClusterNode)
 			err := s.ClusterNodeStore.Delete(node)
+			if err != nil {
+				return err
+			}
+		case string(VirtualMachine):
+			vmLink := deleteItem.(*VirtualMachineObj)
+			err := s.VirtualMachineStore.Delete(vmLink)
 			if err != nil {
 				return err
 			}

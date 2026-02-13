@@ -8,6 +8,10 @@ import (
 	"github.com/vmware-tanzu/nsx-operator/pkg/nsx/services/common"
 )
 
+const (
+	ClusterNameIndexName string = "byClusterName"
+)
+
 type ApplicationInstanceStore struct {
 	common.ResourceStore
 }
@@ -29,6 +33,9 @@ type IngressPolicyStore struct {
 type ClusterStore struct {
 	common.ResourceStore
 }
+type VirtualMachineStore struct {
+	common.ResourceStore
+}
 
 func keyFunc(obj interface{}) (string, error) {
 	switch v := obj.(type) {
@@ -45,6 +52,8 @@ func keyFunc(obj interface{}) (string, error) {
 	case *containerinventory.ContainerNetworkPolicy:
 		return v.ExternalId, nil
 	case *containerinventory.ContainerIngressPolicy:
+		return v.ExternalId, nil
+	case *VirtualMachineObj:
 		return v.ExternalId, nil
 	default:
 		return "", errors.New("keyFunc doesn't support unknown type")
@@ -67,6 +76,8 @@ func indexFunc(obj interface{}) ([]string, error) {
 	case *containerinventory.ContainerNetworkPolicy:
 		return []string{v.ExternalId}, nil
 	case *containerinventory.ContainerIngressPolicy:
+		return []string{v.ExternalId}, nil
+	case *VirtualMachineObj:
 		return []string{v.ExternalId}, nil
 	default:
 		break

@@ -45,6 +45,8 @@ var (
 		watchIngress,
 		watchNode,
 		watchNetworkPolicy,
+		watchVirtualMachine,
+		watchAntreaConfig,
 	}
 )
 
@@ -86,6 +88,7 @@ func (c *InventoryController) setupWithManager(mgr ctrl.Manager) error {
 			return err
 		}
 	}
+
 	// Set up the queue
 	go c.Run(make(<-chan struct{}))
 	return nil

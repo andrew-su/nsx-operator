@@ -10,7 +10,9 @@ import (
 	"os"
 	"time"
 
+	cniv1alpha1 "github-vcf.devops.broadcom.net/vcf/kubernetes-service/apis/addonconfigs/cni/v1alpha1"
 	vmv1alpha1 "github.com/vmware-tanzu/vm-operator/api/v1alpha1"
+	vmv1alpha5 "github.com/vmware-tanzu/vm-operator/api/v1alpha5"
 	_ "go.uber.org/automaxprocs"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -81,6 +83,8 @@ func init() {
 	utilruntime.Must(crdv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(vmv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(vmv1alpha5.AddToScheme(scheme))
+	utilruntime.Must(cniv1alpha1.AddToScheme(scheme))
 	config.AddFlags()
 
 	cf, err = config.NewNSXOperatorConfigFromFile()

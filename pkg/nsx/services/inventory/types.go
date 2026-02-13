@@ -18,6 +18,9 @@ const (
 	// ContainerApplicationInstance represents the inventory type for a specific instance
 	// typically mapping to pods.
 	ContainerApplicationInstance InventoryType = "ContainerApplicationInstance"
+	// VirtualMachine represents the inventory type for a specific virtual machine
+	// typically mapping to cluster virtual machines.
+	VirtualMachine InventoryType = "VirtualMachine"
 	// ContainerNetworkPolicy represents the inventory type for network policies
 	// typically mapping to Kubernetes network policies.
 	ContainerNetworkPolicy InventoryType = "ContainerNetworkPolicy"
@@ -60,6 +63,11 @@ type InventoryKey struct {
 	InventoryType InventoryType
 	ExternalId    string
 	Key           string
+}
+
+type VirtualMachineObj struct {
+	ExternalId string
+	Tag        string
 }
 
 var ServiceNCPErrors = []string{NcpLbError, NcpLbPortError, NcpLbEpError, NcpDlbError, NcpSnatError, NcpAccessLogError}
